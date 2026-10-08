@@ -3,12 +3,17 @@ package com.mawj.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
@@ -32,23 +37,35 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MawjPlayerScreen()
+                    MawjMainScreen()
                 }
             }
         }
     }
 }
 
+data class Song(val title: String, val artist: String, val duration: String)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MawjPlayerScreen() {
+fun MawjMainScreen() {
     var isPlaying by remember { mutableStateOf(false) }
     var sliderPosition by remember { mutableStateOf(30f) }
+    var currentSongIndex by remember { mutableStateOf(0) }
+
+    val playlist = listOf(
+        Song("الموجة الأولى", "تطبيق MAWJ الصوتي", "3:00"),
+        Song("نبض الساحل", "أشباح ميوزك", "3:45"),
+        Song("صدى الأفق", "MAWJ Experience", "4:12"),
+        Song("إيقاع العاصفة", "سيمفونية الموج", "2:55")
+    )
+
+    val currentSong = playlist[currentSongIndex]
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("MAWJ Player", fontWeight = FontWeight.Bold) },
+                title = { Text("MAWJ - مشغل الأمواج", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White
@@ -60,39 +77,44 @@ fun MawjPlayerScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(24.dp),
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // ألبوم الصور أو غلاف الأغنية التخيلي
-            Spacer(modifier = Modifier.height(16.dp))
+            // غلاف الأغنية مع المؤثر البصري للأمواج
             Box(
                 modifier = Modifier
-                    .size(280.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "🌊 MAWJ",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.MusicNote,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    // مؤثر الأمواج البصري المتحرك
+                    AudioVisualizerBars(isPlaying = isPlaying)
+                }
             }
 
-            // معلومات الأغنية
+            // معلومات الأغنية الحالية
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "الموجة الأولى",
-                    fontSize = 24.sp,
+                    text = currentSong.title,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "تطبيق MAWJ الصوتي",
-                    fontSize = 16.sp,
+                    text = currentSong.artist,
+                    fontSize = 14.sp,
                     color = Color.Gray
                 )
             }
@@ -109,7 +131,7 @@ fun MawjPlayerScreen() {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(text = "0:30", fontSize = 12.sp, color = Color.Gray)
-                    Text(text = "3:00", fontSize = 12.sp, color = Color.Gray)
+                    Text(text = currentSong.duration, fontSize = 12.sp, color = Color.Gray)
                 }
             }
 
@@ -119,7 +141,9 @@ fun MawjPlayerScreen() {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { /* الأغنية السابقة */ }) {
+                IconButton(onClick = {
+                    if (currentSongIndex > 0) currentSongIndex-- else currentSongIndex = playlist.size - 1
+                }) {
                     Icon(
                         imageVector = Icons.Default.SkipPrevious,
                         contentDescription = "السابق",
@@ -127,11 +151,10 @@ fun MawjPlayerScreen() {
                     )
                 }
 
-                // زر التشغيل والإيقاف الرئيسي
                 IconButton(
                     onClick = { isPlaying = !isPlaying },
                     modifier = Modifier
-                        .size(72.dp)
+                        .size(64.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary)
                 ) {
@@ -139,11 +162,13 @@ fun MawjPlayerScreen() {
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = "تشغيل",
                         tint = Color.White,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(36.dp)
                     )
                 }
 
-                IconButton(onClick = { /* الأغنية التالية */ }) {
+                IconButton(onClick = {
+                    if (currentSongIndex < playlist.size - 1) currentSongIndex++ else currentSongIndex = 0
+                }) {
                     Icon(
                         imageVector = Icons.Default.SkipNext,
                         contentDescription = "التالي",
@@ -152,15 +177,82 @@ fun MawjPlayerScreen() {
                 }
             }
 
-            // زر المفضلة التفاعلي
-            IconButton(onClick = { /* إضافة للمفضلة */ }) {
-                Icon(
-                    imageVector = Icons.Default.Favorite,
-                    contentDescription = "مفضلة",
-                    tint = Color.Red,
-                    modifier = Modifier.size(28.dp)
-                )
+            // قائمة الأغاني التفاعلية (Playlist)
+            Text(
+                text = "قائمة التشغيل (Playlist)",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(vertical = 4.dp)
+            )
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+            ) {
+                itemsIndexed(playlist) { index, song ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .clickable { currentSongIndex = index },
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (index == currentSongIndex) 
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) 
+                            else 
+                                MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(song.title, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text(song.artist, fontSize = 12.sp, color = Color.Gray)
+                            }
+                            Text(song.duration, fontSize = 12.sp, color = Color.Gray)
+                        }
+                    }
+                }
             }
+        }
+    }
+}
+
+// مكون الأمواج الصوتية المتحركة (Visualizer)
+@Composable
+fun AudioVisualizerBars(isPlaying: Boolean) {
+    val infiniteTransition = rememberInfiniteTransition(label = "wave")
+    
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.height(30.dp)
+    ) {
+        repeat(5) { index ->
+            val heightAnim by infiniteTransition.animateFloat(
+                initialValue = 8f,
+                targetValue = if (isPlaying) (15..28).random().toFloat() else 8f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 300 + (index * 80), easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "bar_$index"
+            )
+
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(heightAnim.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(MaterialTheme.colorScheme.primary)
+            )
         }
     }
 }
