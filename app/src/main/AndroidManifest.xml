@@ -2,10 +2,10 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- الوصول إلى ملفات الصوت الموجودة على الهاتف -->
+    <!-- قراءة ملفات الصوت من الهاتف -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
-    <!-- لأجهزة Android الأقدم -->
+    <!-- لأجهزة Android 12 وأقدم -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
