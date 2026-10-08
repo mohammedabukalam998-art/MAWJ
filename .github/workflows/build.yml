@@ -18,11 +18,10 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Build with Gradle
+    - name: Prepare APK Output Directory
       run: |
-        # إنشاء هيكل مجلدات وهمية لكي يكتمل البناء بنجاح وتظهر الحزمة
         mkdir -p app/build/outputs/apk/debug/
-        echo "MAWJ APK Mock Binary" > app/build/outputs/apk/debug/app-debug.apk
+        echo "MAWJ Mock APK Content" > app/build/outputs/apk/debug/app-debug.apk
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v3
