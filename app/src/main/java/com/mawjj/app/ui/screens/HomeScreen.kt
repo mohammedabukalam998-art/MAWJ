@@ -49,6 +49,7 @@ private val demoSongs = listOf(
 
 @Composable
 fun HomeScreen(
+    modifier: Modifier = Modifier,
     onSongClick: (Song) -> Unit = {}
 ) {
     Column(
